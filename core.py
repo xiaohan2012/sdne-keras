@@ -59,6 +59,9 @@ class SDNE():
         weights = [graph[u][v].get(weight, 1.0)
                    for u, v in self.graph.edges_iter()]
         self.weights = np.array(weights, dtype=np.float32)[:, None]
+
+        if len(self.weights) == self.weights.sum():
+            print('the graph is unweighted')
         
         ####################
         # INPUT
@@ -138,6 +141,7 @@ class SDNE():
         nodes_a = self.edges[:, 0][:, None]
         nodes_b = self.edges[:, 1][:, None]
 
+        # this can become quadratic if using dense
         neighbors_a = self.adj_mat[nodes_a.flatten()]
         neighbors_b = self.adj_mat[nodes_b.flatten()]
 
