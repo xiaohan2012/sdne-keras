@@ -37,7 +37,9 @@ class SDNE():
                  graph,
                  encode_dim,
                  weight='weight',
-                 encoding_layer_dims=[], beta=2, alpha=2):
+                 encoding_layer_dims=[],
+                 beta=2, alpha=2,
+                 l2_param=0.01):
         """graph: nx.Graph
         encode_dim: int, length of inner most dim
         beta: beta parameter under Equation 3
@@ -101,7 +103,7 @@ class SDNE():
                 activation = 'relu'
             layer = Dense(
                 dim, activation=activation,
-                kernel_regularizer=regularizers.l2(0.01),
+                kernel_regularizer=regularizers.l2(l2_param),
                 name='decoding-layer-{}'.format(i))
             decoding_layers.append(layer)
         
