@@ -35,7 +35,7 @@ g = nx.from_scipy_sparse_matrix(mat, create_using=nx.Graph())
 model = SDNE(g, encode_dim=100, encoding_layer_dims=[1720, 200],
              l2_param=0.1)
 
-model.fit(epochs=10, batch_size=32)
+model.fit(epochs=50, batch_size=32)
 
 embeddings = model.get_node_embedding()
 
