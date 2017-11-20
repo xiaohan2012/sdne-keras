@@ -96,7 +96,7 @@ def precision_at_k(pred_y, true_y, k, sort_idx=None):
 # In[ ]:
 
 
-def score(g, dev_edges, test_edges):
+def score(model, g, dev_edges, test_edges):
     # test_edges passed so to remove them from evauation
     N = g.number_of_nodes()
 
@@ -139,7 +139,7 @@ def score(g, dev_edges, test_edges):
 def one_run(g, dev_edges, test_edges, params):
     model = SDNE(g, encode_dim=100, encoding_layer_dims=[5242, 500], **params)
     model.fit(epochs=25, batch_size=64)
-    scores = score(g, dev_edges, test_edges)
+    scores = score(model, g, dev_edges, test_edges)
     return (params, scores)
 
 
