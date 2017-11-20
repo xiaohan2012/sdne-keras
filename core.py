@@ -91,7 +91,7 @@ class SDNE():
         encoding_layer_dims = [encode_dim]
 
         for i, dim in enumerate(encoding_layer_dims):
-            layer = Dense(dim, activation='relu', name='encoding-layer-{}'.format(i))
+            layer = Dense(dim, activation='sigmoid', name='encoding-layer-{}'.format(i))
             encoding_layers.append(layer)
 
         # decoding
@@ -100,7 +100,8 @@ class SDNE():
             if i == len(decoding_layer_dims) - 1:
                 activation = 'sigmoid'
             else:
-                activation = 'relu'
+                # activation = 'relu'
+                activation = 'sigmoid'
             layer = Dense(
                 dim, activation=activation,
                 kernel_regularizer=regularizers.l2(l2_param),
