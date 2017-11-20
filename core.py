@@ -91,7 +91,9 @@ class SDNE():
         encoding_layer_dims = [encode_dim]
 
         for i, dim in enumerate(encoding_layer_dims):
-            layer = Dense(dim, activation='sigmoid', name='encoding-layer-{}'.format(i))
+            layer = Dense(dim, activation='sigmoid',
+                          kernel_regularizer=regularizers.l2(l2_param),
+                          name='encoding-layer-{}'.format(i))
             encoding_layers.append(layer)
 
         # decoding
@@ -135,10 +137,25 @@ class SDNE():
         self.model.compile(optimizer='adadelta',
                            loss=[reconstruction_loss, reconstruction_loss, edge_wise_loss],
                            loss_weights=[1, 1, alpha])
+                           # loss_weights=[0, 0, alpha])
         
         self.encoder = Model(input_a, encoded_a)
+
+        # for pre-training
         self.decoder = Model(input_a, decoded_a)
-    
+        self.decoder.compile(optimizer='adadelta',
+                             loss=reconstruction_loss)
+
+    def pretrain(self, **kwargs):
+        """pre-train the autoencoder without edges"""
+        nodes = np.arange(self.graph.number_of_nodes())
+        node_neighbors = self.adj_mat[nodes]
+                
+        self.decoder.fit(nodes[:, None],
+                         node_neighbors,
+                         shuffle=True,
+                         **kwargs)
+        
     def fit(self, **kwargs):
         """kwargs: keyword arguments passed to `model.fit`"""
         nodes_a = self.edges[:, 0][:, None]

@@ -6,11 +6,9 @@
 
 import numpy as np
 import networkx as nx
-import random
 
 from core import SDNE
 from sklearn.model_selection import train_test_split
-from joblib import Parallel, delayed
 from itertools import product
 from tqdm import tqdm
 
@@ -130,6 +128,7 @@ def score(model, g, dev_edges, test_edges):
     for k in ks:
         p = precision_at_k(pred_y, true_y, k=k, sort_idx=sort_idx)
         scores[k] = p
+        print('precision@{}: {}'.format(k, p))
     return scores
 
 
@@ -138,6 +137,9 @@ def score(model, g, dev_edges, test_edges):
 
 def one_run(g, dev_edges, test_edges, params):
     model = SDNE(g, encode_dim=100, encoding_layer_dims=[5242, 500], **params)
+    print('pre-training...')
+    model.pretrain(epochs=25, batch_size=64)
+    print('training...')
     model.fit(epochs=25, batch_size=64)
     scores = score(model, g, dev_edges, test_edges)
     return (params, scores)
