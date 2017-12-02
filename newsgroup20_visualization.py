@@ -56,6 +56,7 @@ parameter_dicts = [dict(list(zip(parameter_keys, values))) for values in paramet
 
 
 def one_run(params):
+    plt.clf()
     alpha = params['alpha']
     l2_param = params['l2_param']
     pretrain_epochs = params['pretrain_epochs']
@@ -75,7 +76,7 @@ def one_run(params):
     labels = dataset.target
 
     pos = TSNE(n_components=2).fit_transform(embeddings)
-    
+
     plt.scatter(pos[:, 0], pos[:, 1], c=labels)
     # plt.legend(dataset.target_names)
     path = 'figs/20newsgroup_viz-alpha{}-l2_param{}-epochs{}-pre_epochs{}.png'.format(
