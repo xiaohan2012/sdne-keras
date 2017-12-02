@@ -1,7 +1,9 @@
+import math
 import networkx as nx
 import numpy as np
 from functools import reduce
 
+import keras
 from keras import Model, backend as K, regularizers
 from keras.layers import Dense, Embedding, Input, Reshape, Subtract, Lambda
 
@@ -119,7 +121,7 @@ class SDNE():
         encoded_b = reduce(lambda arg, f: f(arg), encoding_layers, input_b)
 
         decoded_a = reduce(lambda arg, f: f(arg), all_layers, input_a)
-        decoded_b = reduce(lambda arg, f: f(arg), all_layers, input_a)
+        decoded_b = reduce(lambda arg, f: f(arg), all_layers, input_b)
         
         embedding_diff = Subtract()([encoded_a, encoded_b])
 
@@ -155,22 +157,47 @@ class SDNE():
                          node_neighbors,
                          shuffle=True,
                          **kwargs)
-        
-    def fit(self, **kwargs):
-        """kwargs: keyword arguments passed to `model.fit`"""
-        nodes_a = self.edges[:, 0][:, None]
-        nodes_b = self.edges[:, 1][:, None]
 
+    def train_data_generator(self, batch_size=32):
         # this can become quadratic if using dense
-        neighbors_a = self.adj_mat[nodes_a.flatten()]
-        neighbors_b = self.adj_mat[nodes_b.flatten()]
+        m = self.graph.number_of_edges()
+        while True:
+            for i in range(math.ceil(m / batch_size)):
+                sel = slice(i*batch_size, (i+1)*batch_size)
+                nodes_a = self.edges[sel, 0][:, None]
+                nodes_b = self.edges[sel, 1][:, None]
+                weights = self.weights[sel]
+                
+                neighbors_a = self.adj_mat[nodes_a.flatten()]
+                neighbors_b = self.adj_mat[nodes_b.flatten()]
 
-        # requires to have the same shape as embedding_diff
-        dummy_output = np.zeros((self.graph.number_of_edges(), self.encode_dim))
-        self.model.fit([nodes_a, nodes_b, self.weights],
-                       [neighbors_a, neighbors_b, dummy_output],
-                       shuffle=True,
-                       **kwargs)
+                # requires to have the same shape as embedding_diff
+                dummy_output = np.zeros((nodes_a.shape[0], self.encode_dim))
+
+                yield ([nodes_a, nodes_b, weights],
+                       [neighbors_a, neighbors_b, dummy_output])
+
+    def fit(self, log=False, **kwargs):
+        """kwargs: keyword arguments passed to `model.fit`"""
+        if log:
+            callbacks = [keras.callbacks.TensorBoard(
+                log_dir='./log', histogram_freq=0,
+                write_graph=True, write_images=False)]
+        else:
+            callbacks = []
+
+        if 'batch_size' in kwargs:
+            batch_size = kwargs['batch_size']
+            del kwargs['batch_size']
+            gen = self.train_data_generator(batch_size=batch_size)
+        else:
+            gen = self.train_data_generator()
+
+        self.model.fit_generator(
+            gen,
+            shuffle=True,
+            callbacks=callbacks,
+            **kwargs)
         
     def get_node_embedding(self):
         nodes = np.array(self.graph.nodes())[:, None]

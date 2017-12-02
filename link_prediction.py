@@ -3,7 +3,8 @@
 
 # In[70]:
 
-
+import pandas as pd
+import pickle as pkl
 import numpy as np
 import networkx as nx
 
@@ -153,7 +154,19 @@ result = [one_run(g, dev_edges, test_edges, params)for params in tqdm(parameter_
 
 # In[ ]:
 
-
-import pickle as pkl
 pkl.dump(result, open('outputs/link_prediction_grqc.pkl', 'wb'))
 
+
+# checking the best
+
+for params, scores in result:
+    scores['param'] = params
+
+
+df = pd.DataFrame.from_records(
+    [r for _, r in result],
+    columns=[2, 10, 100, 200, 300, 500, 800, 1000, 10000, 'param'])
+
+df.sort_values(by=[800, 1000], ascending=False)
+
+# best param {'alpha': 2, 'l2_param': 0.01, 'beta': 8}
