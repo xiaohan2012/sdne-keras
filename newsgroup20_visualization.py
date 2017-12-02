@@ -78,7 +78,7 @@ def one_run(params):
     
     plt.scatter(pos[:, 0], pos[:, 1], c=labels)
     # plt.legend(dataset.target_names)
-    path = 'figs/20newsgroup_viz-alpha{.2f}-l2_param{}-epochs{}-pre_epochs{}.png'.format(
+    path = 'figs/20newsgroup_viz-alpha{}-l2_param{}-epochs{}-pre_epochs{}.png'.format(
         alpha, l2_param, epochs, pretrain_epochs
     )
     plt.savefig(path)
