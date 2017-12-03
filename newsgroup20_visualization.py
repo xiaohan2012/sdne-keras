@@ -1,9 +1,11 @@
 # coding: utf-8
-import math
+
 import matplotlib as mpl
 mpl.use('Agg')
 
+import math
 import networkx as nx
+import pickle as pkl
 
 from itertools import product
 from sklearn.datasets import fetch_20newsgroups
@@ -44,10 +46,10 @@ mat.data = 1 - mat.data  # to similarity
 g = nx.from_scipy_sparse_matrix(mat, create_using=nx.Graph())
 
 
-parameter_grid = {'alpha': [2, 4],
-                  'l2_param': [1e-1, 1e-3, 1e-5],
-                  'pretrain_epochs': [0, 2, 4],
-                  'epochs': [1, 3, 5]}
+parameter_grid = {'alpha': [2],
+                  'l2_param': [0, 1e-2, 1e-3, 1e-4],
+                  'pretrain_epochs': [0],
+                  'epochs': [1]}
 
 parameter_values = list(product(*parameter_grid.values()))
 parameter_keys = list(parameter_grid.keys())
@@ -69,20 +71,26 @@ def one_run(params):
     model.pretrain(epochs=pretrain_epochs, batch_size=32)
 
     n_batches = math.ceil(g.number_of_edges() / batch_size)
+
     model.fit(epochs=epochs, log=True, batch_size=batch_size,
               steps_per_epoch=n_batches)
 
-    embeddings = model.get_node_embedding()
-    labels = dataset.target
-
-    pos = TSNE(n_components=2).fit_transform(embeddings)
-
-    plt.scatter(pos[:, 0], pos[:, 1], c=labels)
-    # plt.legend(dataset.target_names)
-    path = 'figs/20newsgroup_viz-alpha{}-l2_param{}-epochs{}-pre_epochs{}.png'.format(
+    embedding_path = 'embeddings/20newsgroup/alpha{}-l2_param{}-epochs{}-pre_epochs{}.pkl'.format(
         alpha, l2_param, epochs, pretrain_epochs
     )
-    plt.savefig(path)
+    
+    embeddings = model.get_node_embedding()
+    labels = dataset.target
+    pkl.dump((embeddings, labels), open(embedding_path, 'wb'))
+
+    # pos = TSNE(n_components=2).fit_transform(embeddings)
+
+    # plt.scatter(pos[:, 0], pos[:, 1], c=labels)
+    # # plt.legend(dataset.target_names)
+    # path = 'figs/20newsgroup_viz-alpha{}-l2_param{}-epochs{}-pre_epochs{}.png'.format(
+    #     alpha, l2_param, epochs, pretrain_epochs
+    # )
+    # plt.savefig(path)
 
 
 for params in tqdm(parameter_dicts):

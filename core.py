@@ -197,8 +197,12 @@ class SDNE():
             gen,
             shuffle=True,
             callbacks=callbacks,
+            pickle_safe=True,
             **kwargs)
         
     def get_node_embedding(self):
         nodes = np.array(self.graph.nodes())[:, None]
         return self.encoder.predict(nodes)
+
+    def save(self, path):
+        self.model.save(path)
