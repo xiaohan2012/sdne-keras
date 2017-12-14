@@ -1,7 +1,4 @@
-
 # coding: utf-8
-
-# In[70]:
 
 import pandas as pd
 import pickle as pkl
@@ -13,78 +10,86 @@ from core import SDNE
 from sklearn.model_selection import train_test_split
 from itertools import product
 from tqdm import tqdm
+from keras.callbacks import Callback
 
-
-# In[32]:
 
 batch_size = 64
 
 g = nx.read_edgelist('data/grqc.txt', create_using=nx.Graph())
 
 
-# In[33]:
-
-
 g = nx.convert_node_labels_to_integers(g)
 
 
-# In[63]:
-
-
-parameter_grid = {'beta': [2], 'alpha': [2], 'l2_param': [1e-2, 1e-3, 1e-4]}
-
-
-# In[64]:
+parameter_grid = {'beta': [2], 'alpha': [2], 'l2_param': [1e-4]}
 
 
 parameter_values = list(product(*parameter_grid.values()))
 parameter_keys = list(parameter_grid.keys())
 
 
-# In[65]:
-
-
 parameter_dicts = [dict(list(zip(parameter_keys, values))) for values in parameter_values]
-
-
-# In[66]:
-
-
-len(parameter_dicts)
-
-
-# In[35]:
 
 
 dev_ratio = 0.1
 test_ratio = 0.15
 
 
-# In[36]:
-
-
 train_set, test_edges = train_test_split(g.edges(), test_size=test_ratio)
-
-
-# In[37]:
 
 
 _, dev_edges = train_test_split(train_set, test_size=dev_ratio / (1 - test_ratio))
 
 
-# In[38]:
-
-
-g.remove_edges_from(dev_edges + test_edges)
-
-
-# In[39]:
+print('#dev edges: {}, #test edges: {}'.format(len(dev_edges), len(test_edges)))
+g.remove_edges_from(test_edges + dev_edges)
 
 
 g.add_edges_from([(i, i) for i in np.arange(g.number_of_nodes())])
 
 
-# In[ ]:
+class PrecisionAtKEval(Callback):
+    def __init__(self, g, true_edges, excluded_edges, decoder, ks):
+        """
+        ks = [2, 10, 100, 200, 300, 500, 800, 1000, 10000]
+        """
+        self.ks = ks
+        self.maps = []
+        self.decoder = decoder
+
+        N = g.number_of_nodes()
+        self.nodes = np.arange(N)[:, None]
+        self.edges_to_eval = set([(i, j) for i in range(N) for j in range(i+1, N)])
+
+        # we don't consider train edges and excluded_edges
+        # only consider dev edges and other ones
+        self.edges_to_eval -= set(g.edges()) | set(excluded_edges)
+        true_edges = set(true_edges)
+
+        # edges in true_edges are labeled 1
+        # othe edges labeled 0
+        # edge2label = {e: (e in true_edges)
+        #               for e in self.edges_to_eval}
+        self.true_y = np.array([(e in true_edges)
+                                for e in self.edges_to_eval])
+
+    def eval_map(self):
+        # to enable calling this function outside of `keras.Model`
+        reconstructed_adj = self.decoder.predict(self.nodes)
+
+        pred_y = np.array([reconstructed_adj[u, v]
+                           for u, v in self.edges_to_eval])
+
+        sort_idx = np.argsort(pred_y)[::-1]  # index ranked by score from high to low
+
+        return [precision_at_k(pred_y, self.true_y, k=k, sort_idx=sort_idx)
+                for k in self.ks]
+
+    def on_epoch_end(self, epoch, logs={}):
+        row = self.eval_map()
+        print('EPOCH {}'.format(epoch))
+        print('[DEV] precision at k' + ' '.join(["{}:{}".format(k, r) for k, r in zip(self.ks, row)]))
+        self.maps.append(row)
 
 
 def precision_at_k(pred_y, true_y, k, sort_idx=None):
@@ -94,76 +99,41 @@ def precision_at_k(pred_y, true_y, k, sort_idx=None):
     return np.sum(true_y[top_k_idx]) / k
 
 
-# In[ ]:
-
-
-def score(model, g, dev_edges, test_edges):
-    # test_edges passed so to remove them from evauation
-    N = g.number_of_nodes()
-
-    nodes = np.arange(N)[:, None]
-    reconstructed_adj = model.decoder.predict(nodes)
-
-    all_edges = set([(i, j) for i in range(N) for j in range(i+1, N)])
-    
-    # we don't consider train edges and test_edges
-    # only consider dev edges and other ones
-    all_edges -= (set(g.edges()) | set(test_edges))
-    
-    edge2score = {(u, v): reconstructed_adj[u, v]
-                  for u, v in all_edges}
-    dev_edges = set(dev_edges)
-    
-    # edges in dev_edges are labeled 1
-    # othe edges labeled 0
-    edge2label = {e: (e in dev_edges)
-                  for e in edge2score.keys()}
-
-    edges_to_test = list(edge2label.keys())
-
-    pred_y = np.array([edge2score[e] for e in edges_to_test])
-    true_y = np.array([edge2label[e] for e in edges_to_test])
-
-    sort_idx = np.argsort(pred_y)[::-1]
-
-    scores = {}
-    ks = [2, 10, 100, 200, 300, 500, 800, 1000, 10000]
-    for k in ks:
-        p = precision_at_k(pred_y, true_y, k=k, sort_idx=sort_idx)
-        scores[k] = p
-        print('precision@{}: {}'.format(k, p))
-    return scores
-
-
-# In[45]:
-
-
 def one_run(g, dev_edges, test_edges, params):
+    ks = [2, 10, 100, 200, 300, 500, 800, 1000, 10000]
     model = SDNE(g, encode_dim=100, encoding_layer_dims=[5242, 500], **params)
     print('pre-training...')
     model.pretrain(epochs=1, batch_size=batch_size)
     print('training...')
     n_batches = math.ceil(g.number_of_edges() / batch_size)
-    model.fit(epochs=25, batch_size=batch_size,
-              steps_per_epoch=n_batches)
-    scores = score(model, g, dev_edges, test_edges)
-    return (params, scores)
+
+    eval_callback = PrecisionAtKEval(g, dev_edges, test_edges,
+                                     decoder=model.decoder,
+                                     ks=ks)
+    model.fit(epochs=50, batch_size=batch_size,
+              steps_per_epoch=n_batches,
+              callbacks=[eval_callback])
+
+    test_evaluator = PrecisionAtKEval(
+        g, test_edges, dev_edges,  # now we evaluate on test edges
+        decoder=model.decoder,
+        ks=ks)
+    
+    test_vals = test_evaluator.eval_map()
+    test_result = dict(zip(ks, test_vals))
+    return (eval_callback.maps, test_result)
 
 
-# In[71]:
+result = [one_run(g, dev_edges, test_edges, params)
+          for params in tqdm(parameter_dicts)]
 
 
-result = [one_run(g, dev_edges, test_edges, params)for params in tqdm(parameter_dicts)]
-
-
-# In[ ]:
-
-pkl.dump(result, open('outputs/link_prediction_grqc.pkl', 'wb'))
+pkl.dump(result, open('outputs/link_prediction_grqc_epochs.pkl', 'wb'))
 
 
 # checking the best
 
-for params, scores in result:
+for params, scores in result[1].items():
     scores['param'] = params
 
 
@@ -173,4 +143,10 @@ df = pd.DataFrame.from_records(
 
 df.sort_values(by=[800, 1000], ascending=False)
 
-# best param {'alpha': 2, 'l2_param': 0.01, 'beta': 8}
+################
+# Hyper parameter tunning result
+################
+
+# - l2_param: 0.0001
+# - alpha: 2
+# - beta: 2

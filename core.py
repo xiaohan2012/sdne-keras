@@ -186,6 +186,10 @@ class SDNE():
         else:
             callbacks = []
 
+        callbacks += kwargs.get('callbacks', [])
+        if 'callbacks' in kwargs:
+            del kwargs['callbacks']
+
         if 'batch_size' in kwargs:
             batch_size = kwargs['batch_size']
             del kwargs['batch_size']
