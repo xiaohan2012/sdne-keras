@@ -46,10 +46,16 @@ mat.data = 1 - mat.data  # to similarity
 g = nx.from_scipy_sparse_matrix(mat, create_using=nx.Graph())
 
 
+# parameter_grid = {'alpha': [2],
+#                   'l2_param': [0, 1e-2, 1e-3, 1e-4],
+#                   'pretrain_epochs': [0],
+#                   'epochs': [1]}
+
 parameter_grid = {'alpha': [2],
-                  'l2_param': [0, 1e-2, 1e-3, 1e-4],
+                  'l2_param': [1e-3],
                   'pretrain_epochs': [0],
-                  'epochs': [1]}
+                  'epochs': [5]}
+
 
 parameter_values = list(product(*parameter_grid.values()))
 parameter_keys = list(parameter_grid.keys())
