@@ -10,7 +10,7 @@ from keras.layers import Dense, Embedding, Input, Reshape, Subtract, Lambda
 
 def build_reconstruction_loss(beta):
     """
-    2nd order proximity
+    return the loss function for 2nd order proximity
 
     beta: the definition below Equation 3"""
     assert beta > 1
@@ -70,7 +70,10 @@ class SDNE():
         ####################
         # INPUT
         ####################
+
+        # one end of an edge
         input_a = Input(shape=(1,), name='input-a', dtype='int32')
+        # the other end of an edge
         input_b = Input(shape=(1,), name='input-b', dtype='int32')
         edge_weight = Input(shape=(1,), name='edge_weight', dtype='float32')
 
@@ -139,8 +142,7 @@ class SDNE():
         self.model.compile(optimizer='adadelta',
                            loss=[reconstruction_loss, reconstruction_loss, edge_wise_loss],
                            loss_weights=[1, 1, alpha])
-                           # loss_weights=[0, 0, alpha])
-        
+                           
         self.encoder = Model(input_a, encoded_a)
 
         # for pre-training
@@ -205,6 +207,7 @@ class SDNE():
             **kwargs)
         
     def get_node_embedding(self):
+        """return the node embeddings as 2D array, #nodes x dimension"""
         nodes = np.array(self.graph.nodes())[:, None]
         return self.encoder.predict(nodes)
 

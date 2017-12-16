@@ -100,7 +100,11 @@ def precision_at_k(pred_y, true_y, k, sort_idx=None):
 
 
 def one_run(g, dev_edges, test_edges, params):
-    ks = [2, 10, 100, 200, 300, 500, 800, 1000, 10000]
+    # we divide the num. of edges by two because
+    # becauses num. of edges in the paper about 2 times than the actual number of edges
+    # the original:
+    # ks = [2, 10, 100, 200, 300, 500, 800, 1000, 10000]
+    ks = [1, 5, 50, 100, 150, 250, 400, 500, 5000]
     model = SDNE(g, encode_dim=100, encoding_layer_dims=[5242, 500], **params)
     print('pre-training...')
     model.pretrain(epochs=1, batch_size=batch_size)
@@ -110,7 +114,7 @@ def one_run(g, dev_edges, test_edges, params):
     eval_callback = PrecisionAtKEval(g, dev_edges, test_edges,
                                      decoder=model.decoder,
                                      ks=ks)
-    model.fit(epochs=50, batch_size=batch_size,
+    model.fit(epochs=500, batch_size=batch_size,
               steps_per_epoch=n_batches,
               callbacks=[eval_callback])
 
