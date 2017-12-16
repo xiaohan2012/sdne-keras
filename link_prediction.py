@@ -14,6 +14,7 @@ from keras.callbacks import Callback
 
 
 batch_size = 64
+ks = [1, 5, 50, 100, 150, 250, 400, 500, 5000]
 
 g = nx.read_edgelist('data/grqc.txt', create_using=nx.Graph())
 
@@ -104,7 +105,6 @@ def one_run(g, dev_edges, test_edges, params):
     # becauses num. of edges in the paper about 2 times than the actual number of edges
     # the original:
     # ks = [2, 10, 100, 200, 300, 500, 800, 1000, 10000]
-    ks = [1, 5, 50, 100, 150, 250, 400, 500, 5000]
     model = SDNE(g, encode_dim=100, encoding_layer_dims=[5242, 500], **params)
     print('pre-training...')
     model.pretrain(epochs=1, batch_size=batch_size)
@@ -137,15 +137,15 @@ pkl.dump(result, open('outputs/link_prediction_grqc_epochs.pkl', 'wb'))
 
 # checking the best
 
-for params, scores in result[1].items():
-    scores['param'] = params
+# for params, scores in result[1].items():
+#     scores['param'] = params
 
 
-df = pd.DataFrame.from_records(
-    [r for _, r in result],
-    columns=[2, 10, 100, 200, 300, 500, 800, 1000, 10000, 'param'])
+# df = pd.DataFrame.from_records(
+#     [r for _, r in result],
+#     columns=ks + ['param'])
 
-df.sort_values(by=[800, 1000], ascending=False)
+# df.sort_values(by=[800, 1000], ascending=False)
 
 ################
 # Hyper parameter tunning result
