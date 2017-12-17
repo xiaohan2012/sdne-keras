@@ -1,8 +1,4 @@
-
 # coding: utf-8
-
-# In[13]:
-
 
 import tensorflow as tf
 import pickle as pkl
@@ -12,53 +8,21 @@ import os
 from tensorflow.contrib.tensorboard.plugins import projector
 
 
-# In[3]:
-
-
 embedding_path = 'embeddings/20newsgroup/alpha2-l2_param0.001-epochs1-pre_epochs0.pkl'
 embeddings, labels = pkl.load(open(embedding_path, 'rb'))
-
-
-# In[17]:
-
-
-embeddings.shape
-
-
-# In[16]:
 
 
 emb_df = pd.DataFrame(embeddings)
 emb_df.to_csv('embeddings/20newsgroup/embedding.tsv', sep='\t', header=False, index=False)
 
-
-# In[4]:
-
-
 embedding_var = tf.Variable(embeddings, name='node_embeddings')
-
-
-# In[5]:
 
 
 LOG_DIR = 'log/20newsgroup'
 
 
-# In[6]:
-
-
-labels
-
-
-# In[9]:
-
-
 df = pd.Series(labels, name='label')
 df.to_frame().to_csv(LOG_DIR + '/node_labels.tsv', index=False, header=False)
-
-
-# In[15]:
-
 
 with tf.Session() as sess:
     saver = tf.train.Saver([embedding_var])
@@ -75,4 +39,3 @@ with tf.Session() as sess:
     # Saves a config file that TensorBoard will read during startup.
     
     projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
-

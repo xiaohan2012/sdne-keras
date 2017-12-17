@@ -1,6 +1,5 @@
 # coding: utf-8
 
-import pandas as pd
 import pickle as pkl
 import numpy as np
 import networkx as nx
@@ -114,7 +113,7 @@ def one_run(g, dev_edges, test_edges, params):
     eval_callback = PrecisionAtKEval(g, dev_edges, test_edges,
                                      decoder=model.decoder,
                                      ks=ks)
-    model.fit(epochs=500, batch_size=batch_size,
+    model.fit(epochs=200, batch_size=batch_size,
               steps_per_epoch=n_batches,
               callbacks=[eval_callback])
 
