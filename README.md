@@ -3,6 +3,16 @@
 - [The paper](http://www.kdd.org/kdd2016/subtopic/view/structural-deep-network-embedding)
 - More details in [my blog article]()
 
+# some examples
+
+visualzing 20newsgroup data
+
+![](http://xiaohan2012.github.io/assets/img/sdne/20newsgroup_viz.png)
+
+label embedding from [stackexchange.datascience](https://datascience.stackexchange.com/) (`deep-learning` as an example)
+
+![](http://xiaohan2012.github.io/assets/img/sdne/deep-learning.png)
+
 # important scripts
 
 ## main algorithm
