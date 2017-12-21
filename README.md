@@ -6,10 +6,13 @@
 # some examples
 
 visualzing 20newsgroup data
-
+- you can also [play with the embedding interactively](http://projector.tensorflow.org/?config=https://gist.githubusercontent.com/xiaohan2012/f9b66b262ba6f92b0f943be896338146/raw/b3cf61184380a435e710d1702a5f84b6fe6896b6/20news-projector-config.json)
+  
 ![](http://xiaohan2012.github.io/assets/img/sdne/20newsgroup_viz.png)
 
+
 label embedding from [stackexchange.datascience](https://datascience.stackexchange.com/) (`deep-learning` as an example)
+- you can also [play with the embedding interactively](http://projector.tensorflow.org/?config=https://gist.githubusercontent.com/xiaohan2012/5c533ae2d4c67918c3648a23363307c6/raw/a23dd0b1540b3675d211e5f6db4ffdb969de202d/datascience-tensorboard-config)
 
 ![](http://xiaohan2012.github.io/assets/img/sdne/deep-learning.png)
 
