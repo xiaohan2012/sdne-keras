@@ -41,3 +41,8 @@ label embedding from [stackexchange.datascience](https://datascience.stackexchan
 - `stackexchange_train.py`: train for the stackexchange label cooccurence graph
 - `stackexchange_label_embedding.py`: produce the embedding files for tensorboard projector
   - you can also play with it [here](http://projector.tensorflow.org/?config=https://gist.githubusercontent.com/xiaohan2012/5c533ae2d4c67918c3648a23363307c6/raw/a23dd0b1540b3675d211e5f6db4ffdb969de202d/datascience-tensorboard-config) using trained embeddings
+
+# other implementations
+
+- [suanrong/SDNE](https://github.com/suanrong/SDNE)
+- [palash1992/GEM](https://github.com/palash1992/GEM)
