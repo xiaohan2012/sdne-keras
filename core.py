@@ -179,11 +179,13 @@ class SDNE():
                 yield ([nodes_a, nodes_b, weights],
                        [neighbors_a, neighbors_b, dummy_output])
 
-    def fit(self, log=False, **kwargs):
+    def fit(self, log=False, log_dir="./log", **kwargs):
         """kwargs: keyword arguments passed to `model.fit`"""
         if log:
+            print('log_dir={}'.format(log_dir))
             callbacks = [keras.callbacks.TensorBoard(
-                log_dir='./log', histogram_freq=0,
+                log_dir=log_dir,
+                histogram_freq=0,
                 write_graph=True, write_images=False)]
         else:
             callbacks = []
