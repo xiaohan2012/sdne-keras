@@ -1,7 +1,7 @@
 #  Keras implementation of Structural Deep Network Embedding, KDD 2016
 
 - [The paper](http://www.kdd.org/kdd2016/subtopic/view/structural-deep-network-embedding)
-- More details in [my blog article]()
+- More details in [my blog article](http://xiaohan2012.github.io/2017/deep-structral-network-embedding-keras/)
 
 # some examples
 
